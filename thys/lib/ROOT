@@ -1,0 +1,17 @@
+session II_Modest_Base = Isabelle_LLVM +
+  options [browser_info]
+  
+  sessions
+    "Markov_Models"
+    "HOL-Library"
+
+  theories [document=false]  
+    "Base_MEC"
+    "VC_Solve"
+    "More_Functions"
+    "More_List_Rel"
+    "More_snat"
+    "More_B_Assn"
+    "Bitwise_Ext"
+    "Bind_Const"
+    "Nat_Interval"

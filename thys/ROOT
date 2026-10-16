@@ -1,0 +1,10 @@
+session Maxred_LLVM = II_Modest_Base +
+  sessions "Markov_Models" "HOL-Library"
+  directories ds "ds/Impl" "ds/Intf" II mec Gabow_SCC fpii "fpii/standalone"
+  theories
+    "fpii/Interval_Iteration_Tool_GS_Maxred_Impl"
+    "fpii/standalone/Interval_Iteration_Max_GS_Code"
+    "fpii/standalone/Interval_Iteration_Min_GS_Code"
+    "fpii/standalone/Min_Reduction_Code"
+    "fpii/standalone/Max_Reduction_Code"
+    "fpii/standalone/MaxEndComponent_Sorted_Code"

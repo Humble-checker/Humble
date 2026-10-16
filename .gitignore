@@ -1,0 +1,17 @@
+wrapper/build/
+wrapper/examples/
+wrapper/lib/
+/build/
+/generated/
+.vscode/
+*/.claude
+*/CLAUDE.md
+*/SEPREF.md
+*~
+*#
+*.ll
+*.h
+*.marks
+*.dll
+*.so
+*.mcp.json

@@ -1,0 +1,6 @@
+Indentation: One tab for every new context
+ Starting with one indentation in theory block
+ E.g. in a locale, context, Isar proof
+ Apply-stryle proofs are indented, indent further when a subgoal is opened
+
+
