@@ -307,7 +307,7 @@ begin
       } scc_result_t;
     
     \<close>
-      file "modest_scc_gabow_cullable.ll"
+      file "modest_scc_gabow.ll"
   
   end
   

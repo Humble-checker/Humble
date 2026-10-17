@@ -15,6 +15,19 @@ set(HUMBLE_GENERATED_FILES
     fpii/modest_pmin_gs.h
     fpii/modest_pmax_gs.ll
     fpii/modest_pmax_gs.h
+    fpii/standalone/modest_pmin_gs.ll
+    fpii/standalone/modest_pmin_gs.h
+    fpii/standalone/modest_pmax_gs.ll
+    fpii/standalone/modest_pmax_gs.h
+    fpii/standalone/modest_ii_max.ll
+    fpii/standalone/modest_ii_max.h
+    fpii/standalone/modest_ii_min.ll
+    fpii/standalone/modest_ii_min.h
+    mec/standalone/modest_mec.ll
+    mec/standalone/modest_mec.h
+    Gabow_SCC/standalone/modest_scc_gabow.ll
+    Gabow_SCC/standalone/modest_scc_gabow.h
+
 )
 
 option(HUMBLE_BUILD_THEORIES "Build the Isabelle theories and regenerate generated/ from them" OFF)
