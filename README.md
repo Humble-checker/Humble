@@ -17,8 +17,8 @@ NOTE: We require Isabelle/HOL version 2026, and Isabelle-LLVM version 2026.
 ## Prerequisites
 
 - [Isabelle2026](https://isabelle.in.tum.de/), with `isabelle` on `PATH`.
-- The [AFP](https://www.isa-afp.org/) release for Isabelle2026, registered as an Isabelle component.
-- [Isabelle-LLVM](https://github.com/lammich/isabelle_llvm), branch `2026`, in folder isabelle_llvm (git submodule)
+- The [AFP](https://www.isa-afp.org/) release for Isabelle2026, registered as an Isabelle component (isabelle components -u <path to AFP>/thys).
+- [Isabelle-LLVM](https://github.com/lammich/isabelle_llvm), branch `2026`, in folder isabelle_llvm (git submodule update --init) or add the path to Isabelle-LLVM in your filesystem to the components (isabelle components -u <path to Isabelle LLVM>/thys)
 - CMake 3.15 or later, clang, binutils, and the libarchive, nlohmann-json and Boost
   (`program_options`) development packages. On Debian/Ubuntu:
   `apt install cmake clang binutils libarchive-dev nlohmann-json3-dev libboost-program-options-dev`
@@ -29,13 +29,15 @@ The Isabelle items are not needed when building without `-DHUMBLE_BUILD_THEORIES
 
 ## Building (Linux only)
 
+To build the Humble library and tool:
+
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DHUMBLE_BUILD_THEORIES=ON
 cmake --build build -j
 ```
 
-Builds the Isabelle session `Maxred_LLVM` in `thys/` and copies its exported solvers to `generated/`.
-Then compiles those solvers with the C++ frontend into a single binary.
+Builds the Isabelle session `Humble_LLVM` in `thys/` and copies its exported solvers to `generated/` (Humble library).
+Then compiles those solvers with the C++ frontend into a single binary (Humble tool).
 Leave out `-DHUMBLE_BUILD_THEORIES=ON` to build from the existing `generated/` without Isabelle.
 
 ## Generated results
@@ -43,5 +45,15 @@ Leave out `-DHUMBLE_BUILD_THEORIES=ON` to build from the existing `generated/` w
 | path | |
 | --- | --- |
 | `thys/fpii/modest_pmin_gs.{ll,h}`, `thys/fpii/modest_pmax_gs.{ll,h}` | solvers as exported by Isabelle |
-| `generated/modest_pmin_gs.{ll,h}`, `generated/modest_pmax_gs.{ll,h}` | copies of the above |
+| `thys/fpii/standalone/`, `thys/mec/standalone/`, `thys/Gabow_SCC/standalone/` | standalone exports of the individual algorithms |
+| `generated/` | copies of all of the above, in the same subfolders as in `thys/` |
 | `build/humble` | the model checker |
+
+## Interactive proof mode
+
+To check the proofs interactively in jedit (vscode is possible as well):
+
+```bash
+isabelle jedit -d . -R Maxred_LLVM
+```
+

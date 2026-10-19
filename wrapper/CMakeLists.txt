@@ -35,7 +35,7 @@ find_program(ISABELLE_OBJCOPY NAMES objcopy)
 
 foreach(tool ISABELLE_CLANG ISABELLE_LD ISABELLE_OBJCOPY)
     if(NOT ${tool})
-        message(FATAL_ERROR "${tool} not found; it is needed to build the Isabelle-LLVM solvers from generated/*.ll")
+        message(FATAL_ERROR "${tool} not found; it is needed to build the Isabelle-LLVM solvers from generated/fpii/*.ll")
     endif()
 endforeach()
 
@@ -73,8 +73,8 @@ function(add_isabelle_solver name ir entry)
     set(ISABELLE_SOLVER_OBJECTS ${ISABELLE_SOLVER_OBJECTS} "${object}" PARENT_SCOPE)
 endfunction()
 
-add_isabelle_solver(isabelle_pmin "${HUMBLE_GENERATED_DIR}/modest_pmin_gs.ll" compute_II)
-add_isabelle_solver(isabelle_pmax "${HUMBLE_GENERATED_DIR}/modest_pmax_gs.ll" compute_pmax)
+add_isabelle_solver(isabelle_pmin "${HUMBLE_GENERATED_DIR}/fpii/modest_pmin_gs.ll" compute_II)
+add_isabelle_solver(isabelle_pmax "${HUMBLE_GENERATED_DIR}/fpii/modest_pmax_gs.ll" compute_pmax)
 
 set_source_files_properties(${ISABELLE_SOLVER_OBJECTS} PROPERTIES EXTERNAL_OBJECT TRUE GENERATED TRUE)
 
@@ -94,9 +94,9 @@ add_executable(humble
     ${ISABELLE_SOLVER_OBJECTS}
 )
 
-# generated/ is on the include path for the generated modest_*_gs.h headers, which pmin_solver.cpp and
+# generated/fpii/ is on the include path for the generated modest_*_gs.h headers, which pmin_solver.cpp and
 # pmax_solver.cpp include one apiece -- they cannot both be included in a single translation unit.
-target_include_directories(humble PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/headers "${HUMBLE_GENERATED_DIR}")
+target_include_directories(humble PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/headers "${HUMBLE_GENERATED_DIR}/fpii")
 
 target_link_libraries(humble PRIVATE
     LibArchive::LibArchive
