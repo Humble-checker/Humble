@@ -1,5 +1,5 @@
-theory Modest_MDP_MEC
-  imports "Gabow_SCC_Code" "../../ds/BitSet" "../../ds/MEC_map" "../../ds/MEC_Index_List" "II_Modest_Base.More_B_Assn" "../MDP_MEC" "../../ds/SharedNat"
+theory Modest_MDP_MEC_Standalone
+  imports "Gabow_SCC_MEC_Standalone_Code" "../../ds/BitSet" "../../ds/MEC_map" "../../ds/MEC_Index_List" "II_Modest_Base.More_B_Assn" "../MDP_MEC" "../../ds/SharedNat"
 begin
              
   section \<open>General Lemmas\<close>

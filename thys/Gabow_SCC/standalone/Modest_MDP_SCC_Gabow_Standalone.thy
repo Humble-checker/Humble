@@ -1,4 +1,4 @@
-theory Modest_MDP_SCC                
+theory Modest_MDP_SCC_Gabow_Standalone                
   imports "../../ds/Graph"
     "../../ds/Modest_MDP_input" "../../ds/Array_Nat_Tuple_Partition" "../../mec/MDP_MEC"
 begin

@@ -1,6 +1,6 @@
-session Maxred_LLVM = II_Modest_Base +
+session Humble_LLVM = II_Modest_Base +
   sessions "Markov_Models" "HOL-Library"
-  directories ds "ds/Impl" "ds/Intf" II mec Gabow_SCC fpii "fpii/standalone"
+  directories ds "ds/Impl" "ds/Intf" II mec "mec/standalone" Gabow_SCC "Gabow_SCC/standalone" fpii "fpii/standalone"
   theories
     "fpii/Interval_Iteration_Tool_GS_Maxred_Impl"
     "fpii/Interval_Iteration_Tool_GS_Minred_Code"
@@ -8,6 +8,6 @@ session Maxred_LLVM = II_Modest_Base +
     "fpii/standalone/Interval_Iteration_Min_GS_Code"
     "fpii/standalone/Min_Reduction_Code"
     "fpii/standalone/Max_Reduction_Code"
-    "mec/standalone/MaxEndComponent_Code"
-    "Gabow_SCC/standalone/Gabow_SCC_Code"
+    "mec/standalone/MaxEndComponent_Standalone_Code"
+    "Gabow_SCC/standalone/Gabow_SCC_Standalone_Code"
     "fpii/standalone/MaxEndComponent_Sorted_Code"
