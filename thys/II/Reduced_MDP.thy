@@ -450,9 +450,9 @@ proof (induction i arbitrary: ct)
     using MC.T.prob_space_axioms Suc
     apply (subst emeasure_prob_space_compl[symmetric])
     by auto (auto simp: space_stream_space Compl_eq_Diff_UNIV[symmetric] Collect_neg_eq)
-  also have \<open>\<dots> \<le> R.v_fin I ct + \<integral>\<^sup>+ \<omega>. indicator {\<omega>. \<not> R.reach_fin I (smap state (ct ## \<omega>))} \<omega> * ennreal (1 - ?pI ^ i) \<partial>MC.T ct\<close>
+  also have \<open>\<dots> \<le> R.v_fin I ct + (\<integral>\<^sup>+ \<omega>. indicator {\<omega>. \<not> R.reach_fin I (smap state (ct ## \<omega>))} \<omega> * ennreal (1 - ?pI ^ i) \<partial>MC.T ct)\<close>
     by (auto simp: nn_integral_multc space_stream_space) (auto simp: mult.commute)
-  also have \<open>\<dots> \<le> R.v_fin I ct + \<integral>\<^sup>+ \<omega>. indicator {\<omega>. \<not> R.reach_fin I (smap state (ct ## \<omega>))} \<omega> * R.v_fin (i * I) ((ct ## \<omega>) !! I) \<partial>MC.T ct\<close>
+  also have \<open>\<dots> \<le> R.v_fin I ct + (\<integral>\<^sup>+ \<omega>. indicator {\<omega>. \<not> R.reach_fin I (smap state (ct ## \<omega>))} \<omega> * R.v_fin (i * I) ((ct ## \<omega>) !! I) \<partial>MC.T ct)\<close>
     using AE_valid_cfg'[of ct] \<open>ct \<in> valid_cfg\<close> Suc.IH
     by (auto intro!: nn_integral_mono_AE simp: mult_left_mono)
   also have \<open>\<dots> \<le> R.v_fin (I + i * I) ct\<close>

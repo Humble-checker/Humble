@@ -173,7 +173,7 @@ lemma arg_min_on_Min:
   assumes \<open>X \<noteq> {}\<close> \<open>finite X\<close>
   shows \<open>f (arg_min_on f X) = (MIN x \<in> X. f x :: _ :: order)\<close>
   using assms
-  by (smt (verit) Min_in arg_min_SOME_Min finite_imageI imageE image_is_empty verit_sko_ex)
+  by (smt (verit) Min_eqI arg_min_if_finite(1) arg_min_least finite_imageI imageE imageI)
 
 subsection \<open>Integrals\<close>
 

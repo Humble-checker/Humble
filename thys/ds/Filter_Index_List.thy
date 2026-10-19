@@ -18,7 +18,8 @@ text \<open>The following mset lemmas are remnants of an attempt to get rid of t
     apply(induction a)
     apply simp
     apply simp
-    by (metis add_mset_add_single image_mset_single image_mset_union length_Cons map_nth mset.simps(2) mset_map mset_single_iff_right mset_upt nat_in_between_eq(1) union_code upt_append upt_conv_Cons upt_conv_Nil)
+    by (metis add_single_right_eq_add_mset image_mset_single image_mset_union length_Cons map_nth mset.simps(1,2) mset_map
+        mset_upt nat_in_between_eq(1) union_code upt_append upt_conv_Cons upt_conv_Nil)
 
   lemma mset_nth_image_set: "(!) a `# mset_set {x. x < length a} = mset a"
     using mset_nth_image
