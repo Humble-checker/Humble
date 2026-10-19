@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(Humble C CXX)
 
+include(versions.cmake)
+
 # --- Generated solver IR -----------------------------------------------------------------------
 #
 # The wrapper compiles the Isabelle-LLVM IR it finds in generated/. By default that is whatever is
@@ -9,16 +11,13 @@ project(Humble C CXX)
 
 set(HUMBLE_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated")
 
-# Every file export_llvm writes that the wrapper consumes, relative to thys/.
+# Every file export_llvm writes that is kept in generated/, relative to thys/. generated/ mirrors
+# the thys/ folders, so exports with the same name in different folders do not collide.
 set(HUMBLE_GENERATED_FILES
     fpii/modest_pmin_gs.ll
     fpii/modest_pmin_gs.h
     fpii/modest_pmax_gs.ll
     fpii/modest_pmax_gs.h
-    fpii/standalone/modest_pmin_gs.ll
-    fpii/standalone/modest_pmin_gs.h
-    fpii/standalone/modest_pmax_gs.ll
-    fpii/standalone/modest_pmax_gs.h
     fpii/standalone/modest_ii_max.ll
     fpii/standalone/modest_ii_max.h
     fpii/standalone/modest_ii_min.ll
@@ -27,31 +26,28 @@ set(HUMBLE_GENERATED_FILES
     mec/standalone/modest_mec.h
     Gabow_SCC/standalone/modest_scc_gabow.ll
     Gabow_SCC/standalone/modest_scc_gabow.h
-
 )
 
 option(HUMBLE_BUILD_THEORIES "Build the Isabelle theories and regenerate generated/ from them" OFF)
 
 if(HUMBLE_BUILD_THEORIES)
-    set(ISABELLE_SESSION Maxred_LLVM CACHE STRING "Isabelle session whose theories export the solvers")
+    set(ISABELLE_SESSION Humble_LLVM CACHE STRING "Isabelle session whose theories export the solvers")
     set(ISABELLE_BUILD_OPTIONS "" CACHE STRING "Extra arguments for isabelle build, e.g. -d <dir> or -o threads=8")
 
-    find_program(ISABELLE_EXECUTABLE isabelle HINTS ENV ISABELLE_HOME PATH_SUFFIXES bin)
-    if(NOT ISABELLE_EXECUTABLE)
-        message(FATAL_ERROR "isabelle not found; put it on PATH, set ISABELLE_HOME, or pass -DISABELLE_EXECUTABLE=...")
+    # isabelle is whatever is on PATH, looked up afresh each time it runs -- nothing is cached.
+    execute_process(
+        COMMAND isabelle version
+        RESULT_VARIABLE isabelle_result
+        OUTPUT_VARIABLE isabelle_version
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NOT isabelle_result EQUAL 0)
+        message(FATAL_ERROR "isabelle not found on PATH (${isabelle_result})")
     endif()
-
-    # bin/isabelle is a bash script. Windows cannot run it directly, so go through the Cygwin
-    # bash that every Isabelle distribution for Windows ships.
-    set(ISABELLE_COMMAND "${ISABELLE_EXECUTABLE}")
-    if(WIN32)
-        get_filename_component(isabelle_home "${ISABELLE_EXECUTABLE}" DIRECTORY)
-        get_filename_component(isabelle_home "${isabelle_home}" DIRECTORY)
-        find_program(ISABELLE_BASH bash HINTS "${isabelle_home}/contrib/cygwin/bin" NO_DEFAULT_PATH)
-        if(NOT ISABELLE_BASH)
-            message(FATAL_ERROR "Cygwin bash not found under ${isabelle_home}/contrib/cygwin; pass -DISABELLE_BASH=...")
-        endif()
-        set(ISABELLE_COMMAND "${ISABELLE_BASH}" "${ISABELLE_EXECUTABLE}")
+    # Anchored so that 2026 accepts neither 2026-1 nor 2026-RC1.
+    if(NOT isabelle_version MATCHES "^Isabelle${HUMBLE_ISABELLE_VERSION}($|[^-0-9])")
+        message(FATAL_ERROR "isabelle on PATH is '${isabelle_version}', but the theories need "
+                "Isabelle${HUMBLE_ISABELLE_VERSION} (see versions.cmake)")
     endif()
 
     separate_arguments(isabelle_build_options NATIVE_COMMAND "${ISABELLE_BUILD_OPTIONS}")
@@ -59,14 +55,22 @@ if(HUMBLE_BUILD_THEORIES)
     file(GLOB_RECURSE theory_sources CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/thys/*.thy"
         "${CMAKE_CURRENT_SOURCE_DIR}/thys/ROOT"
+        "${CMAKE_CURRENT_SOURCE_DIR}/thys/ROOTS"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ROOTS"
     )
 
     set(copy_commands "")
     foreach(file ${HUMBLE_GENERATED_FILES})
-        list(APPEND copy_commands COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-             "${CMAKE_CURRENT_SOURCE_DIR}/thys/${file}" "${HUMBLE_GENERATED_DIR}/")
+        get_filename_component(dir "${file}" DIRECTORY)
+        list(APPEND copy_commands
+             COMMAND "${CMAKE_COMMAND}" -E make_directory "${HUMBLE_GENERATED_DIR}/${dir}"
+             COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                     "${CMAKE_CURRENT_SOURCE_DIR}/thys/${file}" "${HUMBLE_GENERATED_DIR}/${dir}/")
     endforeach()
 
+    # Run from the repository root, whose ROOTS brings in thys/ (and through it thys/lib) and the
+    # Isabelle-LLVM submodule.
+    #
     # -c, because isabelle build otherwise skips a session its own database records as current,
     # and then does not rewrite the exports -- after a clean, they would stay missing. It rebuilds
     # only this session, not its ancestors.
@@ -76,11 +80,10 @@ if(HUMBLE_BUILD_THEORIES)
     set(stamp "${CMAKE_CURRENT_BINARY_DIR}/isabelle_theories.stamp")
     add_custom_command(
         OUTPUT "${stamp}"
-        COMMAND ${ISABELLE_COMMAND} build -d . -c ${isabelle_build_options} -v "${ISABELLE_SESSION}"
-        COMMAND "${CMAKE_COMMAND}" -E make_directory "${HUMBLE_GENERATED_DIR}"
+        COMMAND isabelle build -d . -c ${isabelle_build_options} -v "${ISABELLE_SESSION}"
         ${copy_commands}
         COMMAND "${CMAKE_COMMAND}" -E touch "${stamp}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thys"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         DEPENDS ${theory_sources}
         COMMENT "Building Isabelle session ${ISABELLE_SESSION} and refreshing generated/"
         USES_TERMINAL
@@ -94,10 +97,10 @@ if(HUMBLE_BUILD_THEORIES)
     list(TRANSFORM HUMBLE_GENERATED_FILES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/thys/" OUTPUT_VARIABLE thys_exports)
     set_property(TARGET isabelle_theories PROPERTY ADDITIONAL_CLEAN_FILES ${thys_exports})
 else()
-    foreach(file ${HUMBLE_GENERATED_FILES})
-        get_filename_component(name "${file}" NAME)
-        if(NOT EXISTS "${HUMBLE_GENERATED_DIR}/${name}")
-            message(FATAL_ERROR "generated/${name} is missing; configure with -DHUMBLE_BUILD_THEORIES=ON to build it from thys/")
+    # Only what the wrapper compiles; the standalone exports are not needed to build Humble.
+    foreach(file fpii/modest_pmin_gs.ll fpii/modest_pmin_gs.h fpii/modest_pmax_gs.ll fpii/modest_pmax_gs.h)
+        if(NOT EXISTS "${HUMBLE_GENERATED_DIR}/${file}")
+            message(FATAL_ERROR "generated/${file} is missing; configure with -DHUMBLE_BUILD_THEORIES=ON to build it from thys/")
         endif()
     endforeach()
 endif()

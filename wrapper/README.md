@@ -40,7 +40,7 @@ apt install cmake clang binutils libarchive-dev nlohmann-json3-dev libboost-all-
 LLVM IR as part of the build. Of Boost, only `program_options` and the header-only `rational` are
 used.
 
-The solvers are built from the Isabelle-LLVM output in `generated/` at the repository root:
+The solvers are built from the Isabelle-LLVM output in `generated/fpii/` at the repository root:
 
 | file | purpose |
 | --- | --- |
@@ -59,9 +59,8 @@ cmake --build build -j
 ```
 
 To regenerate `generated/` from the theories in `thys/` first, add `-DHUMBLE_BUILD_THEORIES=ON`.
-That runs `isabelle build` on the `Maxred_LLVM` session (on Windows through Isabelle's bundled
-Cygwin bash), so Isabelle and the AFP sessions it imports must be set up. `isabelle` is looked up on
-`PATH` and under `ISABELLE_HOME`, or pass `-DISABELLE_EXECUTABLE=...`; extra arguments go in
+That runs `isabelle build` on the `Maxred_LLVM` session with the `isabelle` on `PATH`, which must
+be the release named in `versions.cmake`, with the AFP registered. Extra arguments go in
 `-DISABELLE_BUILD_OPTIONS="..."`.
 
 This compiles the two `.ll` files, gives each solver a private copy of the shared runtime, and
