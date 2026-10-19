@@ -1,9 +1,9 @@
 section \<open>Code Generation for SCC-Computation \label{sec:scc_code}\<close>
-theory Gabow_SCC_Code
+theory Gabow_SCC_MEC_Standalone_Code
 imports 
-  "../Gabow_Skeleton_Code"
-  "../Gabow_SCC"
-  "Modest_MDP_SCC"  
+  "../../Gabow_SCC/Gabow_Skeleton_Code"
+  "../../Gabow_SCC/Gabow_SCC"
+  "Modest_MDP_SCC_MEC_Standalone"
   "../../ds/SCC_map" 
   "II_Modest_Base.Bind_Const"
 begin
@@ -246,7 +246,7 @@ begin
       where N=N and D=N
       and MG_assn = "modest_mdp_succ_DS_assn DS" 
       and succ_index_assn = "modest_index_DS_assn DS"
-      and admissible_idi = "mop_modest_is_admissible_ll'"
+      and admissible_idi = "mop_modest_is_admissible_ll' ni"
       and empty_idi = "modest_is_empty_ll'"
       and init_idi = modest_index_begin_ll'
       and get_statei = modest_get_state_ll'
@@ -258,29 +258,28 @@ begin
   
     
     concrete_definition(in -) Modest_compute_SCC_impl[llvm_code] is 
-      compute_SCC_impl_ll'_def[of mop_modest_is_admissible_ll' modest_is_empty_ll' modest_index_begin_ll' modest_get_state_ll' modest_succ_at_ll' modest_has_successor_ll' modest_next_index_ll']
+      compute_SCC_impl_ll'_def[of "mop_modest_is_admissible_ll' ni" modest_is_empty_ll' modest_index_begin_ll' modest_get_state_ll' modest_succ_at_ll' modest_has_successor_ll' modest_next_index_ll']
     
   end
-
   
   context
   begin
   
-    interpretation disj_set_list_tuple_defs N N ni ni for N ni .
-    interpretation scc_map_defs N N ni for N ni .
-    interpretation modest_init_mdp_env_defs N . 
-    
-    type_synonym scc_resulti = "size_t \<times> size_t ptr"
-    
-    definition Modest_cullable_compute_SCC_impl' :: "size_t \<Rightarrow> modest_mdpi ptr \<Rightarrow> scc_resulti ptr \<Rightarrow> unit llM"
-    where [llvm_code, llvm_inline]: "Modest_cullable_compute_SCC_impl' ni Eip resp \<equiv> doM {
-      Ei \<leftarrow> ll_load Eip;
-      res \<leftarrow> Modest_compute_SCC_impl ni Ei;
-      ll_store res resp
-    }"
+  interpretation disj_set_list_tuple_defs N N ni ni for N ni .
+  interpretation scc_map_defs N N ni for N ni .
+  interpretation modest_init_mdp_env_defs N . 
+  
+  type_synonym scc_resulti = "size_t \<times> size_t ptr"
+  
+  definition Modest_cullable_compute_SCC_impl' :: "size_t \<Rightarrow> modest_mdpi ptr \<Rightarrow> scc_resulti ptr \<Rightarrow> unit llM"
+  where [llvm_code, llvm_inline]: "Modest_cullable_compute_SCC_impl' ni Eip resp \<equiv> doM {
+    Ei \<leftarrow> ll_load Eip;
+    res \<leftarrow> Modest_compute_SCC_impl ni Ei;
+    ll_store res resp
+  }"
   
     export_llvm Modest_cullable_compute_SCC_impl'  
-      is "void compute_SCC(modest_size_t, modest_input_mdp_t *, scc_result_t *)"  
+      is "void compute_SCC(modest_size_t, modest_input_mdp_t *, mec_result_t *)"  
     defines \<open>
       typedef uint64_t modest_size_t;
       typedef modest_size_t node_t;
@@ -295,19 +294,31 @@ begin
             node_t *branches;
             struct {
               bitset_t avoid;
-              bitset_t target;
+              struct {
+                bitset_t target;
+                struct {
+                  struct {
+                    modest_size_t n1;
+                    struct {
+                      modest_size_t n2;
+                      modest_size_t *data;
+                    };
+                  };
+                  modest_size_t num;
+                };
+              };
             };
           };
         };
       } modest_input_mdp_t;
     
       typedef struct {
-        modest_size_t num_sccs;
-        node_t *scc_map;
-      } scc_result_t;
+        modest_size_t num_mecs;
+        node_t *mec_map;
+      } mec_result_t;
     
     \<close>
-      file "modest_scc_gabow.ll"
+      file "modest_scc_gabow_cullable.ll"
   
   end
   
@@ -317,7 +328,7 @@ begin
   
   locale Modest_graph_impl_loc = modest_init_mdp_env N ni + mdp_graph_scc_impl_def_loc MG "{0..<N}" N N "modest_mdp_succ_DS_assn DS" 
     "modest_index_DS_assn DS" 
-      mop_modest_is_admissible_ll' modest_is_empty_ll' modest_index_begin_ll' modest_get_state_ll' 
+      "mop_modest_is_admissible_ll' ni" modest_is_empty_ll' modest_index_begin_ll' modest_get_state_ll' 
       modest_succ_at_ll modest_has_successor_ll modest_next_index_ll' ni
     for MG and N :: nat and DS and ni +
     assumes E_BOUND: "E_\<alpha> \<subseteq> {0..<N} \<times> {0..<N}"
@@ -327,7 +338,7 @@ begin
   
     sublocale mdp_graph_scc_impl_loc MG "{0..<N}" N "N" "modest_mdp_succ_DS_assn DS" 
     "modest_index_DS_assn DS" 
-      mop_modest_is_admissible_ll' modest_is_empty_ll' modest_index_begin_ll' modest_get_state_ll' 
+      "mop_modest_is_admissible_ll' ni" modest_is_empty_ll' modest_index_begin_ll' modest_get_state_ll' 
       modest_succ_at_ll' modest_has_successor_ll' modest_next_index_ll' ni
       apply unfold_locales
       subgoal
@@ -355,7 +366,7 @@ begin
       apply(rule hr_comp_entails)
       apply blast
       unfolding scc_map_defs.SCC_rel_def
-      using card_reachable_bound
+      using card_reachable_bound  
       by (fastforce simp: in_br_conv split: option.splits node_state.splits)
       
                                                                                          
@@ -472,68 +483,8 @@ begin
         apply(drule hfrefD)
         by auto
     qed
-
-    lemma pure_part_modest_mdp_succ_assn_E: "pure_part (modest_mdp_succ_assn MG Ei) \<Longrightarrow> 
-      (\<exists>DS. pure_part (modest_mdp_succ_DS_assn DS MG Ei) \<Longrightarrow> P) \<Longrightarrow> P"
-      unfolding modest_mdp_succ_assn_alt pure_part_def by blast
-
-
-    lemma modest_mdp_succ_DS_assn_MGD: "pure_part (modest_mdp_succ_DS_assn DS MG Ei) \<Longrightarrow> MG = modest_mdp_def.SK_\<alpha> N DS"
-      unfolding modest_mdp_succ_DS_assn_def
-      apply(drule pure_part_hr_compD)
-      apply(clarsimp simp: Range_iff )
-      apply(frule modest_mdp_succ_rel_DS_eq)
-      by(auto simp: modest_mdp_succ_DS_rel_def  in_br_conv)
-
-
-    lemma modest_mdp_succ_DS_assn_closedD: "pure_part (modest_mdp_succ_DS_assn DS MG Ei) \<Longrightarrow> mdp_graph_defs.E_\<alpha> MG \<subseteq> {0..<N} \<times> {0..<N}"
-      apply(frule modest_mdp_succ_DS_assn_MGD)
-      unfolding modest_mdp_succ_DS_assn_def
-      by (auto dest!: modest_mdp_invar'.E_\<alpha>_len_St pure_part_hr_compD 
-        simp: Range_iff modest_mdp_succ_DS_rel_def br_def modest_mdp_invar_def modest_mdp_def.SK_\<alpha>_def )
-
-    lemma modest_mdp_succ_DS_assn_VD: "pure_part (modest_mdp_succ_DS_assn DS MG Ei) \<Longrightarrow> mdp_graph_defs.V0 MG \<subseteq> {0..<N}"
-      by(auto simp: mdp_graph_defs.V0_def modest_mdp_def.SK_\<alpha>_def modest_mdp_def.S_\<alpha>_def dest!: modest_mdp_succ_DS_assn_MGD)
+  
   end
-
-
-
-  theorem Modest_graph_SCC_impl_correct_htriple: "llvm_htriple 
-    ( snat_assn N ni ** \<up>(2 * N < max_snat LENGTH(64)) **
-      modest_init_mdp_env_defs.modest_mdp_succ_assn N MG Mi)
-
-    (Modest_compute_SCC_impl ni Mi) 
-    (\<lambda>ri. EXS r. 
-      snat_assn N ni ** \<up>(2 * N < max_snat LENGTH(64)) 
-      ** modest_init_mdp_env_defs.modest_mdp_succ_assn N MG Mi
-      ** scc_map_defs.output_assn N N r ri 
-      ** \<up>(set r = mdp_graph_defs.scc_set MG)
-      ** \<up>(mdp_graph_defs.ordered MG r))"
-    apply(rule htriple_pure_preI)
-    proof (goal_cases)
-      case 1
-  
-      then interpret modest_init_mdp_env 
-        apply unfold_locales 
-        by (auto dest!: pure_part_split_conj)
-  
-      from 1 obtain St Tr Br Av Ta where "pure_part (modest_mdp_succ_DS_assn (St,Tr,Br,Av,Ta) MG Mi)"
-        by(auto dest!: pure_part_split_conj elim: pure_part_modest_mdp_succ_assn_E)
-  
-      hence INV: "Modest_graph_impl_loc MG N ni"
-        unfolding modest_mdp_def.SK_\<alpha>_def
-        apply unfold_locales 
-        apply (fact|clarsimp simp: modest_mdp_succ_DS_assn_closedD)+ 
-        using modest_mdp_succ_DS_assn_VD by fastforce
-  
-      note [simp] = hr_comp_b_rel_Id
-      note [simp] = mdp_graph_defs.compute_SCC_spec_def
-      note [vcg_rules] = Modest_graph_impl_loc.Modest_graph_skeleton_impl_refines_spec[OF INV, to_hnr, THEN hn_refineD, unfolded hn_ctxt_def, of MG _ Mi, simplified]
-  
-      show ?case 
-        unfolding modest_mdp_succ_assn_alt
-        by vcg
-    qed
 
 end
 

@@ -1,5 +1,5 @@
-theory MaxEndComponent_Code
-  imports "Isabelle_LLVM.Proto_IICF_EOArray" "Modest_MDP_MEC" "../MaxEndComponent"
+theory MaxEndComponent_Standalone_Code
+  imports "Isabelle_LLVM.Proto_IICF_EOArray" "Modest_MDP_MEC_Standalone" "../MaxEndComponent"
 begin
 
   
