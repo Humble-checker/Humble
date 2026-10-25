@@ -32,7 +32,11 @@ static int run(const InputSettings& settings, const ErrorHandler* const errorHan
         std::cout << "Analysis finished for property: P" << (settings.isMaximize() ? "max" : "min") << "=? [ "
                     << (settings.getAvoid() != "" ? "!" + settings.getAvoid() : "true") <<  " U "
                     << settings.getTarget() <<  " ]" << std::endl;
-        std::cout << "Reachability Probability: " << result.lb << " - " << result.ub << std::endl;
+        // A double's exact decimal expansion has at most 767 significant digits, so that precision
+        // prints it in full; trailing zeros are dropped either way.
+        const int digits = settings.getDigits() == 0 ? 767 : static_cast<int>(settings.getDigits());
+        std::cout << "Reachability Probability: " << std::setprecision(digits)
+                  << result.lb << " - " << result.ub << std::endl;
 
         // Solver time covers the Isabelle-LLVM entry point alone; total covers the whole run,
         // command line and model loading included.

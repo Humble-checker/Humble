@@ -19,6 +19,7 @@ public:
     size_t getMaxIterations() const { return maxIterations; }
     double getFpTolerance() const { return fpTolerance; }
     double getEpsilon() const { return epsilon; }
+    unsigned getDigits() const { return digits; }
 
     std::string getModel() const { return model; }
     std::string getAvoid() const { return avoid; }
@@ -35,6 +36,7 @@ private:
     size_t maxIterations = 100000;
     double epsilon = 1e-6;
     double fpTolerance = 1e-12;
+    unsigned digits = 16;
 
     std::string model;
     std::string avoid;

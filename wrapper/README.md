@@ -84,8 +84,9 @@ humble <model.umb> -t <target> [-a <avoid>] [-m] [options]
 | `-v`, `--verbose` | report progress, model size, and which files are read |
 | `-c`, `--cow` | treat warnings as fatal |
 | `--max-iters` | iteration cap (default 100000) |
-| `--eps` | convergence threshold (default 1e-6) |
-| `--fp-tolerance` | slack in the probability sanity check (default 1e-12) |
+| `--eps` | convergence threshold, rounded down to a double (default 1e-6) |
+| `--fp-tolerance` | slack in the probability sanity check, rounded down to a double (default 1e-12) |
+| `-d`, `--digits` | significant digits of the printed bounds (default 16); 0 prints their exact values |
 | `-h`, `--help` | option summary |
 
 `-t` and `-a` name **atomic propositions carried by the model**, not state formulas; they must be

@@ -1,13 +1,34 @@
 #include "input_settings.hpp"
 #include <boost/program_options.hpp>
+#include <cfenv>
+#include <cstdlib>
 #include <iostream>
 
 namespace po = boost::program_options;
+
+// The largest double not above the decimal in text. glibc's strtod honours the rounding mode, so
+// rounding downward reads it as a lower bound rather than the nearest double.
+static double parseRoundedDown(const std::string& text)
+{
+    const int originalRoundingMode = std::fegetround();
+    std::fesetround(FE_DOWNWARD);
+    char* end = nullptr;
+    const double value = std::strtod(text.c_str(), &end);
+    std::fesetround(originalRoundingMode);
+
+    if (text.empty() || *end != '\0')
+    {
+        throw po::invalid_option_value(text);
+    }
+    return value;
+}
 
 std::pair<const InputSettings, bool> InputSettings::parseCommandLine(int argc, char** argv) {
     po::options_description desc("Allowed options");
 
     InputSettings settings;
+    std::string epsilon;
+    std::string fpTolerance;
 
     desc.add_options()
         ("help,h", "produce help message")
@@ -17,8 +38,9 @@ std::pair<const InputSettings, bool> InputSettings::parseCommandLine(int argc, c
         ("avoid,a", po::value<std::string>(&settings.avoid)->default_value(""), "States to avoid")
         ("target,t", po::value<std::string>(&settings.target)->default_value(""), "Target states. If not specified, no analysis is performed (probability is 0).")
         ("max-iters", po::value<size_t>(&settings.maxIterations)->default_value(100000), "Maximum number of iterations.")
-        ("eps", po::value<double>(&settings.epsilon)->default_value(1e-6), "Epsilon value for convergence.")
-        ("fp-tolerance", po::value<double>(&settings.fpTolerance)->default_value(1e-12), "Slack allowed when checking that each choice's branch probabilities describe a distribution, violation causes a warning.")
+        ("eps", po::value<std::string>(&epsilon)->default_value("1e-6"), "Epsilon value for convergence. Rounded down to the nearest double.")
+        ("fp-tolerance", po::value<std::string>(&fpTolerance)->default_value("1e-12"), "Slack allowed when checking that each choice's branch probabilities describe a distribution, violation causes a warning. Rounded down to the nearest double.")
+        ("digits,d", po::value<unsigned>(&settings.digits)->default_value(16), "Significant digits of the printed probability bounds; 0 prints each bound's exact value.")
         ("examine-umb,x", po::bool_switch(&settings.examineUmb)->default_value(false), "Examine UMB files.")
         ("maximize,m", po::bool_switch(&settings.maximize)->default_value(false), "Compute the maximal reachability probability (Pmax) instead of the minimal one (Pmin).");
 
@@ -40,6 +62,8 @@ std::pair<const InputSettings, bool> InputSettings::parseCommandLine(int argc, c
         }
 
         po::notify(vm);
+        settings.epsilon = parseRoundedDown(epsilon);
+        settings.fpTolerance = parseRoundedDown(fpTolerance);
     } catch (const po::error &e) {
         std::cerr << "Error: " << e.what() << "\n";
         std::cout << desc << "\n";
