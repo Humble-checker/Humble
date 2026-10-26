@@ -40,6 +40,17 @@ Builds the Isabelle session `Humble_LLVM` in `thys/` and copies its exported sol
 Then compiles those solvers with the C++ frontend into a single binary (Humble tool).
 Leave out `-DHUMBLE_BUILD_THEORIES=ON` to build from the existing `generated/` without Isabelle.
 
+## Building with Docker
+
+Needs only Docker; the image installs Isabelle, the AFP and the C++ toolchain inside a container:
+
+```bash
+git submodule update --init
+docker build --output type=local,dest=. .
+```
+
+This runs the build above and puts `generated/` and `build/` in the root of the repository (`.`).
+
 ## Generated results
 
 | path | |

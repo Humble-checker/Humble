@@ -1,0 +1,10 @@
+# Local build output: a copied CMakeCache.txt would point at this machine's paths.
+build
+generated
+wrapper/build
+wrapper/lib
+wrapper/examples
+# Dotfiles (.git, editor and tool settings) and editor backups.
+.*
+**/.git
+**/*~
