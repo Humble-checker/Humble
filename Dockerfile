@@ -14,6 +14,8 @@ RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        ca-certificates curl libfontconfig1 libgomp1 perl \
        cmake make clang binutils libarchive-dev nlohmann-json3-dev libboost-program-options-dev \
+       pkg-config nettle-dev libacl1-dev liblzma-dev libzstd-dev liblz4-dev libbz2-dev zlib1g-dev \
+       libxml2-dev libicu-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY versions.cmake /tmp/
@@ -29,7 +31,7 @@ RUN mkdir /opt/afp \
 
 WORKDIR /humble
 COPY . .
-RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DHUMBLE_BUILD_THEORIES=ON \
+RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DHUMBLE_BUILD_THEORIES=ON -DHUMBLE_STATIC=ON \
     && cmake --build build -j
 
 FROM scratch

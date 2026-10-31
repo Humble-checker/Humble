@@ -12,6 +12,13 @@ if(NOT DEFINED HUMBLE_GENERATED_DIR)
     set(HUMBLE_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../generated")
 endif()
 
+# A fully static binary runs on hosts that lack its libraries or have an older glibc -- the case
+# for what the Dockerfile exports.
+option(HUMBLE_STATIC "Link humble fully statically" OFF)
+if(HUMBLE_STATIC)
+    set(Boost_USE_STATIC_LIBS ON)
+endif()
+
 find_package(LibArchive REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options)
@@ -99,7 +106,15 @@ add_executable(humble
 target_include_directories(humble PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/headers "${HUMBLE_GENERATED_DIR}/fpii")
 
 target_link_libraries(humble PRIVATE
-    LibArchive::LibArchive
     nlohmann_json::nlohmann_json
     Boost::program_options
 )
+
+if(HUMBLE_STATIC)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(ARCHIVE REQUIRED libarchive libxml-2.0)
+    target_link_options(humble PRIVATE -static)
+    target_link_libraries(humble PRIVATE ${ARCHIVE_STATIC_LIBRARIES})
+else()
+    target_link_libraries(humble PRIVATE LibArchive::LibArchive)
+endif()
