@@ -3,6 +3,7 @@ wrapper/examples/
 wrapper/lib/
 /build/
 /generated/
+/shared/
 .vscode/
 */.claude
 */CLAUDE.md

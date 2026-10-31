@@ -1,11 +1,3 @@
-# Builds the Isabelle theories and Humble, and exports generated/ and build/:
-#
-#   docker build --output type=local,dest=out .
-#
-# The Isabelle release comes from versions.cmake; the AFP from AFP_URL (by default the development
-# snapshot, which is what a release candidate needs). Isabelle-LLVM is the isabelle_llvm submodule,
-# so run `git submodule update --init` first.
-
 FROM ubuntu:26.04 AS build
 
 ARG AFP_URL=https://foss.heptapod.net/isa-afp/afp-devel/-/archive/branch/default/afp-devel-branch-default.tar.gz
@@ -34,6 +26,15 @@ COPY . .
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DHUMBLE_BUILD_THEORIES=ON -DHUMBLE_STATIC=ON \
     && cmake --build build -j
 
-FROM scratch
+FROM scratch AS export
 COPY --from=build /humble/generated /generated
-COPY --from=build /humble/build /build
+# Only the binary: the rest of the build tree, CMakeCache.txt included, is tied to /humble/build
+# and would make a local `cmake -B build` refuse to run.
+COPY --from=build /humble/build/humble /build/humble
+
+# The default stage: a shell with humble on PATH, started in /shared, where the host's shared/
+# folder is mounted for models and results. humble is static, so the image needs nothing else.
+FROM ubuntu:26.04
+COPY --from=build /humble/build/humble /usr/local/bin/humble
+WORKDIR /shared
+CMD ["bash"]

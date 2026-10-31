@@ -42,21 +42,33 @@ Leave out `-DHUMBLE_BUILD_THEORIES=ON` to build from the existing `generated/` w
 
 ## Building with Docker
 
-Needs only Docker; the image installs Isabelle, the AFP and the C++ toolchain inside a container:
+Builds for Linux only! Usage on other operating systems within the container is possible.
+
+Prerequisites: Only Docker. The image installs Isabelle, the AFP and the C++ toolchain inside a container. From the root of the repository:
 
 ```bash
 git submodule update --init
-docker build --output type=local,dest=. .
+docker build -t humble .
+docker run --rm -it -v "${PWD}/shared:/shared" humble
 ```
 
-This runs the build above and puts `generated/` and `build/` in the root of the repository (`.`).
+This runs the build above and opens a shell in `/shared` with `humble` on `PATH`. `/shared` is the
+`shared/` folder in the repository (created if missing): put models and write results there.
+
+To get `generated/` and `build/humble` in the root of the repository instead:
+
+```bash
+docker build --target export --output type=local,dest=. .
+```
+
+`build/humble` is linked statically (`-DHUMBLE_STATIC=ON`), so it runs on hosts without its libraries.
 
 ## Generated results
 
 | path | |
 | --- | --- |
 | `thys/fpii/modest_pmin_gs.{ll,h}`, `thys/fpii/modest_pmax_gs.{ll,h}` | solvers as exported by Isabelle |
-| `thys/fpii/standalone/`, `thys/mec/standalone/`, `thys/Gabow_SCC/standalone/` | standalone exports of the individual algorithms |
+| `thys/fpii/standalone/`, `thys/mec/standalone/`, `thys/Gabow_SCC/standalone/` | standalone libraries of the individual algorithms |
 | `generated/` | copies of all of the above, in the same subfolders as in `thys/` |
 | `build/humble` | the model checker |
 
